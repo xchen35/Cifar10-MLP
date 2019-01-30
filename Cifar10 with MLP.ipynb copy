@@ -1,0 +1,258 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "Using TensorFlow backend.\n"
+     ]
+    }
+   ],
+   "source": [
+    "from __future__ import print_function\n",
+    "import numpy as np\n",
+    "import keras\n",
+    "from keras.models import Sequential\n",
+    "from keras.layers import Dense, Dropout\n",
+    "from keras.optimizers import RMSprop"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def unpickle(file):\n",
+    "    import pickle\n",
+    "    with open(file, 'rb') as fo:\n",
+    "        dict = pickle.load(fo, encoding='bytes')\n",
+    "    return dict"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "cifar10_1 = unpickle(\"cifar-10-batches-py/data_batch_1\")\n",
+    "cifar10_2 = unpickle(\"cifar-10-batches-py/data_batch_2\")\n",
+    "cifar10_3 = unpickle(\"cifar-10-batches-py/data_batch_3\")\n",
+    "cifar10_4 = unpickle(\"cifar-10-batches-py/data_batch_4\")\n",
+    "cifar10_5 = unpickle(\"cifar-10-batches-py/data_batch_5\")\n",
+    "cifar10_test = unpickle(\"cifar-10-batches-py/test_batch\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "cifar10_rgb = np.concatenate((cifar10_1[b'data'],cifar10_2[b'data'],cifar10_3[b'data'],cifar10_4[b'data'],cifar10_5[b'data']))\n",
+    "cifar10_labels = np.concatenate((cifar10_1[b'labels'],cifar10_2[b'labels'],cifar10_3[b'labels'],cifar10_4[b'labels'],cifar10_5[b'labels']))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#cifar10cifar10_1[b'data'].shape\n",
+    "#cifar10_test\n",
+    "\n",
+    "cifar10_test_rgb = cifar10_test[b'data']\n",
+    "cirfar10_test_labels = cifar10_test[b'labels']"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# setup base epochs and batach_size\n",
+    "\n",
+    "batch_size = 128\n",
+    "num_classes = 10\n",
+    "epochs = 20"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "x_train, y_train, x_test, y_test = cifar10_rgb, cifar10_labels, cifar10_test_rgb, cirfar10_test_labels"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "50000 train samples\n",
+      "10000 test samples\n"
+     ]
+    }
+   ],
+   "source": [
+    "x_train = x_train.reshape(50000, 32 * 32 * 3)\n",
+    "x_test = x_test.reshape(10000, 32 * 32 * 3)\n",
+    "x_train = x_train.astype('float32')\n",
+    "x_test = x_test.astype('float32')\n",
+    "x_train /= 255\n",
+    "x_test /= 255\n",
+    "print(x_train.shape[0], 'train samples')\n",
+    "print(x_test.shape[0], 'test samples')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# convert class vectors to binary class matrices\n",
+    "y_train = keras.utils.to_categorical(y_train, num_classes)\n",
+    "y_test = keras.utils.to_categorical(y_test, num_classes)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "model = Sequential()\n",
+    "act = keras.layers.ELU(alpha=1.0)\n",
+    "model.add(Dense(256, activation=act, input_shape=(32 * 32 * 3,)))\n",
+    "model.add(Dropout(0.2))\n",
+    "model.add(Dense(256, activation=act))\n",
+    "model.add(Dropout(0.2))\n",
+    "model.add(Dense(num_classes, activation='softmax'))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "_________________________________________________________________\n",
+      "Layer (type)                 Output Shape              Param #   \n",
+      "=================================================================\n",
+      "dense_4 (Dense)              (None, 256)               786688    \n",
+      "_________________________________________________________________\n",
+      "dropout_3 (Dropout)          (None, 256)               0         \n",
+      "_________________________________________________________________\n",
+      "dense_5 (Dense)              (None, 256)               65792     \n",
+      "_________________________________________________________________\n",
+      "dropout_4 (Dropout)          (None, 256)               0         \n",
+      "_________________________________________________________________\n",
+      "dense_6 (Dense)              (None, 10)                2570      \n",
+      "=================================================================\n",
+      "Total params: 855,050\n",
+      "Trainable params: 855,050\n",
+      "Non-trainable params: 0\n",
+      "_________________________________________________________________\n",
+      "Train on 50000 samples, validate on 10000 samples\n",
+      "Epoch 1/20\n",
+      "50000/50000 [==============================] - 19s 378us/step - loss: 2.4389 - acc: 0.2107 - top_k_categorical_accuracy: 0.7006 - val_loss: 1.8121 - val_acc: 0.3386 - val_top_k_categorical_accuracy: 0.8395\n",
+      "Epoch 2/20\n",
+      "50000/50000 [==============================] - 17s 347us/step - loss: 1.9570 - acc: 0.3000 - top_k_categorical_accuracy: 0.8084 - val_loss: 1.8123 - val_acc: 0.3523 - val_top_k_categorical_accuracy: 0.8517\n",
+      "Epoch 3/20\n",
+      "50000/50000 [==============================] - 18s 355us/step - loss: 1.8235 - acc: 0.3451 - top_k_categorical_accuracy: 0.8443 - val_loss: 1.8953 - val_acc: 0.3041 - val_top_k_categorical_accuracy: 0.8610\n",
+      "Epoch 4/20\n",
+      "50000/50000 [==============================] - 18s 362us/step - loss: 1.7298 - acc: 0.3800 - top_k_categorical_accuracy: 0.8680 - val_loss: 1.6082 - val_acc: 0.4116 - val_top_k_categorical_accuracy: 0.8963\n",
+      "Epoch 5/20\n",
+      "50000/50000 [==============================] - 18s 355us/step - loss: 1.6687 - acc: 0.4008 - top_k_categorical_accuracy: 0.8822 - val_loss: 1.5311 - val_acc: 0.4557 - val_top_k_categorical_accuracy: 0.9043\n",
+      "Epoch 6/20\n",
+      "50000/50000 [==============================] - 16s 326us/step - loss: 1.6207 - acc: 0.4201 - top_k_categorical_accuracy: 0.8909 - val_loss: 1.5431 - val_acc: 0.4500 - val_top_k_categorical_accuracy: 0.9033\n",
+      "Epoch 7/20\n",
+      "50000/50000 [==============================] - 16s 322us/step - loss: 1.5950 - acc: 0.4330 - top_k_categorical_accuracy: 0.8963 - val_loss: 1.5140 - val_acc: 0.4568 - val_top_k_categorical_accuracy: 0.9105\n",
+      "Epoch 8/20\n",
+      "50000/50000 [==============================] - 17s 336us/step - loss: 1.5746 - acc: 0.4394 - top_k_categorical_accuracy: 0.9015 - val_loss: 1.4906 - val_acc: 0.4669 - val_top_k_categorical_accuracy: 0.9132\n",
+      "Epoch 9/20\n",
+      "50000/50000 [==============================] - 18s 356us/step - loss: 1.5792 - acc: 0.4374 - top_k_categorical_accuracy: 0.9003 - val_loss: 1.4867 - val_acc: 0.4605 - val_top_k_categorical_accuracy: 0.9197\n",
+      "Epoch 10/20\n",
+      "50000/50000 [==============================] - 18s 356us/step - loss: 1.7039 - acc: 0.4172 - top_k_categorical_accuracy: 0.8870 - val_loss: 3.0267 - val_acc: 0.2263 - val_top_k_categorical_accuracy: 0.7925\n",
+      "Epoch 11/20\n",
+      "50000/50000 [==============================] - 18s 363us/step - loss: 10.3679 - acc: 0.2112 - top_k_categorical_accuracy: 0.7511 - val_loss: 13.3087 - val_acc: 0.1524 - val_top_k_categorical_accuracy: 0.9580\n",
+      "Epoch 12/20\n",
+      "50000/50000 [==============================] - 18s 357us/step - loss: 13.2343 - acc: 0.1716 - top_k_categorical_accuracy: 0.9928 - val_loss: 13.2344 - val_acc: 0.1772 - val_top_k_categorical_accuracy: 1.0000\n",
+      "Epoch 13/20\n",
+      "50000/50000 [==============================] - 18s 353us/step - loss: 13.4384 - acc: 0.1645 - top_k_categorical_accuracy: 1.0000 - val_loss: 13.2488 - val_acc: 0.1756 - val_top_k_categorical_accuracy: 1.0000\n",
+      "Epoch 14/20\n",
+      "50000/50000 [==============================] - 18s 362us/step - loss: 13.4181 - acc: 0.1663 - top_k_categorical_accuracy: 1.0000 - val_loss: 12.7416 - val_acc: 0.2074 - val_top_k_categorical_accuracy: 1.0000\n",
+      "Epoch 15/20\n",
+      "50000/50000 [==============================] - 18s 351us/step - loss: 13.4608 - acc: 0.1643 - top_k_categorical_accuracy: 1.0000 - val_loss: 13.4255 - val_acc: 0.1664 - val_top_k_categorical_accuracy: 1.0000\n",
+      "Epoch 16/20\n",
+      "50000/50000 [==============================] - 18s 357us/step - loss: 13.4872 - acc: 0.1623 - top_k_categorical_accuracy: 1.0000 - val_loss: 14.2327 - val_acc: 0.1165 - val_top_k_categorical_accuracy: 1.0000\n",
+      "Epoch 17/20\n",
+      "48640/50000 [============================>.] - ETA: 0s - loss: 13.5143 - acc: 0.1609 - top_k_categorical_accuracy: 1.0000"
+     ]
+    }
+   ],
+   "source": [
+    "model.summary()\n",
+    "from keras import metrics\n",
+    "model.compile(loss='categorical_crossentropy',\n",
+    "              optimizer=RMSprop(),\n",
+    "              metrics=['accuracy', metrics.top_k_categorical_accuracy])\n",
+    "\n",
+    "history = model.fit(x_train, y_train,\n",
+    "                    batch_size=batch_size,\n",
+    "                    epochs=epochs,\n",
+    "                    verbose=1,\n",
+    "                    validation_data=(x_test, y_test))\n",
+    "score = model.evaluate(x_test, y_test, verbose=0)\n",
+    "print('Test loss:', score[0])\n",
+    "print('Test accuracy:', score[1])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.6.8"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}
