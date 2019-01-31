@@ -1,1 +1,1 @@
-# Cifar10-MLP
+# Cifar10-MLP-&&-CNN
